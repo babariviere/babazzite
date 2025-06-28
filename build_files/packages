@@ -1,0 +1,87 @@
+# Compositor
+niri
+xwayland-satellite
+
+# auth
+fprintd-pam
+
+# apps
+1password
+emacs
+foot
+mako
+waybar
+kanshi
+fuzzel
+swaybg
+swayidle
+swaylock
+syncthing
+
+# fonts
+nerd-fonts
+fontawesome-fonts-all
+
+# utility
+slurp
+grimshot
+wev
+wl-clipboard
+brightnessctl
+wlr-randr
+
+# portal
+xdg-desktop-portal-wlr
+xdg-desktop-portal-gtk
+
+# containers
+podman
+#podman-bootc
+podman-docker
+podman-tui
+#devpod
+
+# # emulation
+# libvirt
+# qemu-char-spice
+# qemu-device-display-virtio-gpu
+# qemu-device-display-virtio-vga
+# qemu-device-usb-redirect
+# qemu-img
+# qemu-system-x86-core
+# qemu-user-binfmt
+# qemu-user-static
+# qemu
+# virt-manager
+# virt-viewer
+
+# env
+polkit
+xdg-user-dirs
+dbus-tools
+dbus-daemon
+libnotify
+vulkan-tools
+
+# networking
+network-manager-applet
+bluez
+bluez-tools
+blueman
+tailscale
+wireguard-tools
+
+# power
+tlp
+
+# sound
+pipewire
+wireplumber
+pamixer
+pavucontrol
+
+# classic dev tools
+gcc
+make
+openssh
+openssh-askpass

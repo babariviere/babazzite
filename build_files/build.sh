@@ -1,24 +1,42 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -ouex pipefail
 
+repos=(
+    yalter/niri
+    alternateved/bleeding-emacs
+    ulysg/xwayland-satellite
+)
+
+for repo in "${repos[@]}"; do
+    dnf5 -y copr enable $repo
+done
+
+curl -Lo 1password.sh https://raw.githubusercontent.com/blue-build/modules/22fe11d844763bf30bd83028970b975676fe7beb/modules/bling/installers/1password.sh
+
+chmod +x 1password.sh
+bash ./1password.sh
+
+rm 1password.sh
+
 ### Install packages
 
-# Packages can be installed from any enabled yum repo on the image.
-# RPMfusion repos are available by default in ublue main images
-# List of rpmfusion packages can be found here:
-# https://mirrors.rpmfusion.org/mirrorlist?path=free/fedora/updates/39/x86_64/repoview/index.html&protocol=https&redirect=1
+grep -v '^#' /ctx/packages | xargs dnf5 install -y
 
-# this installs a package from fedora repos
-dnf5 install -y tmux 
+#### Setup niri deps
 
-# Use a COPR Example:
-#
-# dnf5 -y copr enable ublue-os/staging
-# dnf5 -y install package
-# Disable COPRs so they don't end up enabled on the final image:
-# dnf5 -y copr disable ublue-os/staging
+mkdir /usr/lib/systemd/user/niri.service.wants
+ln -s /usr/lib/systemd/user/mako.service /usr/lib/systemd/user/niri.service.wants/
+ln -s /usr/lib/systemd/user/waybar.service /usr/lib/systemd/user/niri.service.wants/
+ln -s /usr/lib/systemd/user/swayidle.service /usr/lib/systemd/user/niri.service.wants/
+ln -s /usr/lib/systemd/user/kanshi.service /usr/lib/systemd/user/niri.service.wants/
 
-#### Example for enabling a System Unit File
+#### Services
 
 systemctl enable podman.socket
+systemctl enable -f --global podman.socket
+
+
+for repo in "${repos[@]}"; do
+    dnf5 -y copr disable $repo
+done
