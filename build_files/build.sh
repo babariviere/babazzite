@@ -27,8 +27,7 @@ grep -v '^#' /ctx/packages | xargs dnf5 install -y
 
 mkdir /usr/lib/systemd/user/niri.service.wants
 ln -s /usr/lib/systemd/user/mako.service /usr/lib/systemd/user/niri.service.wants/
-# Do not link waybar since it's already linked by niri from the Fedora package apparently.
-# ln -s /usr/lib/systemd/user/waybar.service /usr/lib/systemd/user/niri.service.wants/
+ln -s /usr/lib/systemd/user/waybar.service /usr/lib/systemd/user/niri.service.wants/
 ln -s /usr/lib/systemd/user/swayidle.service /usr/lib/systemd/user/niri.service.wants/
 ln -s /usr/lib/systemd/user/kanshi.service /usr/lib/systemd/user/niri.service.wants/
 
