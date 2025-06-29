@@ -78,6 +78,8 @@ pipewire
 wireplumber
 pamixer
 pavucontrol
+# Noise canceling
+easyeffects
 
 # classic dev tools
 gcc
