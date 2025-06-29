@@ -9,5 +9,5 @@ ExecStart=/usr/bin/swayidle -w \
   timeout 600 'swaylock -f' \
   timeout 1200 'systemctl suspend' \
   before-sleep 'swaylock -f' \
-  resume 'niri msg action power-on-monitors'
+  after-resume 'niri msg action power-on-monitors'
 Restart=on-failure
