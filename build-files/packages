@@ -80,6 +80,7 @@ pamixer
 pavucontrol
 # Noise canceling
 easyeffects
+lsp-plugins
 
 # classic dev tools
 gcc
