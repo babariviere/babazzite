@@ -80,7 +80,13 @@ pamixer
 pavucontrol
 # Noise canceling
 easyeffects
+calf
 lsp-plugins
+lsp-plugins-clap
+lsp-plugins-gstreamer
+lsp-plugins-lv2
+lsp-plugins-vst
+lsp-plugins-vst3
 
 # classic dev tools
 gcc
