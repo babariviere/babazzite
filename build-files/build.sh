@@ -6,6 +6,7 @@ repos=(
     yalter/niri
     alternateved/bleeding-emacs
     ulysg/xwayland-satellite
+    wezfurlong/wezterm-nightly
 )
 
 for repo in "${repos[@]}"; do
