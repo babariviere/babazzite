@@ -94,3 +94,8 @@ gcc
 make
 openssh
 openssh-askpass
+
+# bevy packages
+wayland-devel
+alsa-lib-devel
+libudev-devel

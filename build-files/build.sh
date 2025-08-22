@@ -24,6 +24,12 @@ rm 1password.sh
 
 grep -v '^#' /ctx/packages | xargs dnf5 install -y
 
+#### Setup environment
+
+cat >>/etc/environment <<EOF
+PKG_CONFIG_PATH=/etc/pkgconfig:/usr/lib64/pkgconfig:/usr/share/pkgconfig
+EOF
+
 #### Setup niri deps
 
 mkdir /usr/lib/systemd/user/niri.service.wants
