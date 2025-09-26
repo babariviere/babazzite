@@ -38,7 +38,7 @@ xdg-desktop-portal-gtk
 
 # containers
 podman
-#podman-bootc
+podman-bootc
 podman-docker
 podman-tui
 #devpod
