@@ -44,7 +44,8 @@ podman-tui
 #devpod
 
 # # emulation
-# libvirt
+libvirt
+libvirt-daemon-config-network
 # qemu-char-spice
 # qemu-device-display-virtio-gpu
 # qemu-device-display-virtio-vga
