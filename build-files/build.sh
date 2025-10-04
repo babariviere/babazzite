@@ -36,6 +36,8 @@ EOF
 
 grep -v '^#' /ctx/packages | xargs dnf5 install -y
 
+dnf5 group install -y c-development development-tools
+
 #### Setup environment
 
 cat >>/etc/environment <<EOF
