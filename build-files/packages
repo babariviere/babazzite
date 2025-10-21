@@ -55,8 +55,8 @@ libvirt-daemon-config-network
 # qemu-user-binfmt
 # qemu-user-static
 # qemu
-# virt-manager
-# virt-viewer
+virt-manager
+virt-viewer
 
 # env
 polkit
