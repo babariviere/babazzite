@@ -36,7 +36,7 @@ EOF
 
 grep -v '^#' /ctx/packages | xargs dnf5 install -y
 
-dnf5 group install -y c-development development-tools
+dnf5 group install -y c-development development-tools virtualization
 
 #### Setup environment
 
@@ -55,6 +55,7 @@ ln -s /usr/lib/systemd/user/swayidle.service /usr/lib/systemd/user/niri.service.
 
 systemctl enable podman.socket
 systemctl enable -f --global podman.socket
+systemctl enable libvirtd
 
 
 for repo in "${repos[@]}"; do
