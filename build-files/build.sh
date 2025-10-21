@@ -4,7 +4,6 @@ set -ouex pipefail
 
 repos=(
     yalter/niri
-    alternateved/bleeding-emacs
     ulysg/xwayland-satellite
     wezfurlong/wezterm-nightly
     gmaglione/podman-bootc
