@@ -1,6 +1,7 @@
 # Compositor
 niri
 xwayland-satellite
+mate-polkit
 
 # auth
 fprintd-pam
