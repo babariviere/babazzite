@@ -99,3 +99,6 @@ openssh-askpass
 wayland-devel
 alsa-lib-devel
 libudev-devel
+
+# starship-jj deps
+libgit2
