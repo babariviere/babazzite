@@ -30,7 +30,11 @@ gpgcheck=1
 gpgkey=https://repo.cider.sh/RPM-GPG-KEY
 EOF
 
+dnf5 -y config-manager setopt "terra".enabled=true
+
 ### Install packages
+
+cat /etc/yum.repos.d/terra.repo
 
 grep -v '^#' /ctx/packages | xargs dnf5 install -y
 
@@ -45,9 +49,7 @@ EOF
 #### Setup niri deps
 
 mkdir /usr/lib/systemd/user/niri.service.wants
-ln -s /usr/lib/systemd/user/mako.service /usr/lib/systemd/user/niri.service.wants/
-ln -s /usr/lib/systemd/user/waybar.service /usr/lib/systemd/user/niri.service.wants/
-ln -s /usr/lib/systemd/user/swayidle.service /usr/lib/systemd/user/niri.service.wants/
+# ln -s /usr/lib/systemd/user/mako.service /usr/lib/systemd/user/niri.service.wants/
 
 #### Services
 

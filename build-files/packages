@@ -10,14 +10,10 @@ fprintd-pam
 emacs-pgtk
 1password
 foot
-mako
-waybar
-fuzzel
 swaybg
-swayidle
-swaylock
 #syncthing
 Cider
+noctalia-shell
 
 # fonts
 nerd-fonts
