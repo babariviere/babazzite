@@ -24,6 +24,7 @@ wev
 wl-clipboard
 brightnessctl
 wlr-randr
+cliphist
 
 # portal
 xdg-desktop-portal-wlr
