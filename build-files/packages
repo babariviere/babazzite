@@ -100,3 +100,6 @@ libudev-devel
 
 # starship-jj deps
 libgit2
+
+# erlang deps
+ncurses-devel
