@@ -103,3 +103,6 @@ libgit2
 
 # erlang deps
 ncurses-devel
+
+# homepod
+onnxruntime-devel
