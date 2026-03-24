@@ -3,7 +3,7 @@ FROM scratch AS ctx
 COPY build-files /
 
 # Base Image
-FROM ghcr.io/ublue-os/bazzite-gnome:stable
+FROM ghcr.io/ublue-os/bazzite-gnome:unstable
 
 COPY system-files/usr /usr
 
