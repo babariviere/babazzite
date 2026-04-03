@@ -116,3 +116,5 @@ webkitgtk6.0-devel
 # Rust toolchain (for building glimpse)
 rust
 cargo
+
+incus
