@@ -4,6 +4,7 @@ xwayland-satellite
 
 # auth
 fprintd-pam
+helium-bin
 
 # apps
 # firefox

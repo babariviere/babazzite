@@ -6,6 +6,7 @@ repos=(
     yalter/niri
     ulysg/xwayland-satellite
     gmaglione/podman-bootc
+    imput/helium
 )
 
 for repo in "${repos[@]}"; do
@@ -50,6 +51,19 @@ EOF
 
 mkdir /usr/lib/systemd/user/niri.service.wants
 # ln -s /usr/lib/systemd/user/mako.service /usr/lib/systemd/user/niri.service.wants/
+
+#### Symlink /opt to /var/opt for mutable /opt content
+# This ensures packages like helium-bin that install to /opt are accessible
+# https://bootc-dev.github.io/bootc/filesystem.html#more-generally-dealing-with-opt
+mkdir -p /var/opt
+rmdir /opt 2>/dev/null || true
+ln -sr /var/opt /opt
+
+# Ensure tmpfiles.d creates this symlink on every boot
+mkdir -p /usr/lib/tmpfiles.d
+cat > /usr/lib/tmpfiles.d/opt.conf << 'EOF'
+L! /opt - - - - /var/opt
+EOF
 
 #### Services
 
