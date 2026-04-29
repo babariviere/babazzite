@@ -52,17 +52,18 @@ EOF
 mkdir /usr/lib/systemd/user/niri.service.wants
 # ln -s /usr/lib/systemd/user/mako.service /usr/lib/systemd/user/niri.service.wants/
 
-#### Symlink /opt to /var/opt for mutable /opt content
-# This ensures packages like helium-bin that install to /opt are accessible
+#### Relocate /opt payloads into /usr so they survive bootc deploys
+# /opt -> /var/opt on bazzite, and /var is per-machine state (not part of the
+# image), so anything an RPM drops into /opt gets thrown away at deploy time.
+# Move the real content under /usr/lib/opt (immutable, in the image) and
+# recreate the /opt entry with tmpfiles.d on every boot.
 # https://bootc-dev.github.io/bootc/filesystem.html#more-generally-dealing-with-opt
-mkdir -p /var/opt
-rmdir /opt 2>/dev/null || true
-ln -sr /var/opt /opt
+mkdir -p /usr/lib/opt
+mv /opt/helium /usr/lib/opt/helium
 
-# Ensure tmpfiles.d creates this symlink on every boot
 mkdir -p /usr/lib/tmpfiles.d
-cat > /usr/lib/tmpfiles.d/opt.conf << 'EOF'
-L! /opt - - - - /var/opt
+cat > /usr/lib/tmpfiles.d/opt-helium.conf << 'EOF'
+L+ /var/opt/helium - - - - /usr/lib/opt/helium
 EOF
 
 #### Services
