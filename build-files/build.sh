@@ -20,17 +20,6 @@ bash ./1password.sh
 
 rm 1password.sh
 
-rpm --import https://repo.cider.sh/RPM-GPG-KEY
-
-tee /etc/yum.repos.d/cider.repo << 'EOF'
-[cidercollective]
-name=Cider Collective Repository
-baseurl=https://repo.cider.sh/rpm/RPMS
-enabled=1
-gpgcheck=1
-gpgkey=https://repo.cider.sh/RPM-GPG-KEY
-EOF
-
 dnf5 -y config-manager setopt "terra".enabled=true
 
 ### Install packages
@@ -76,5 +65,3 @@ systemctl enable libvirtd
 for repo in "${repos[@]}"; do
     dnf5 -y copr disable $repo
 done
-
-rm /etc/yum.repos.d/cider.repo
