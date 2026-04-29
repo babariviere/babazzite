@@ -70,9 +70,6 @@ blueman
 tailscale
 wireguard-tools
 
-# power
-tlp
-
 # sound
 pipewire
 wireplumber
@@ -119,3 +116,6 @@ rust
 cargo
 
 incus
+
+# anno
+webkit2gtk4.1-devel
