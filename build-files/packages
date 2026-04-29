@@ -8,7 +8,7 @@ helium-bin
 
 # apps
 # firefox
-emacs-pgtk
+# emacs-pgtk
 1password
 foot
 swaybg
@@ -104,11 +104,6 @@ ncurses-devel
 # homepod
 onnxruntime-devel
 llama-cpp
-
-# glimpse deps (GTK4)
-gtk4-layer-shell
-gtk4-layer-shell-devel
-webkitgtk6.0-devel
 
 # Rust toolchain (for building glimpse)
 rust
