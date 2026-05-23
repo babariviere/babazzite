@@ -113,3 +113,5 @@ incus
 
 # anno
 webkit2gtk4.1-devel
+
+fuse-sshfs
