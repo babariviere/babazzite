@@ -1,0 +1,5 @@
+# Disable USB autosuspend for the RTL8852BE combo card's Bluetooth radio
+# (IMC Networks 13d3:3571). The btusb/btrtl stack does not reliably re-register
+# hci0 with bluetoothd after USB autosuspend or system resume, leaving the
+# adapter invisible until manually toggled off/on.
+ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="13d3", ATTR{idProduct}=="3571", TEST=="power/control", ATTR{power/control}="on"
