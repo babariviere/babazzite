@@ -1,0 +1,10 @@
+[Unit]
+Description=Apply bootc image updates
+Documentation=man:bootc(8)
+ConditionPathExists=/run/ostree-booted
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/bootc upgrade --quiet
