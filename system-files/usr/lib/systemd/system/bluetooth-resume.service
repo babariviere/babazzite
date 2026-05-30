@@ -1,0 +1,13 @@
+[Unit]
+Description=Re-enable Bluetooth adapter after resume
+# The RTL8852BE combo card's hci0 sometimes stays powered off after a
+# suspend/resume cycle even with USB autosuspend disabled, requiring a manual
+# `bluetoothctl power on`. Run that for us on resume.
+After=suspend.target hibernate.target hybrid-sleep.target suspend-then-hibernate.target bluetooth.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/bluetoothctl power on
+
+[Install]
+WantedBy=suspend.target hibernate.target hybrid-sleep.target suspend-then-hibernate.target
