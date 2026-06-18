@@ -7,7 +7,12 @@ After=suspend.target hibernate.target hybrid-sleep.target suspend-then-hibernate
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/bluetoothctl power on
+# After resume the RTL8852 USB device re-enumerates and its controller takes
+# ~1s to re-register with bluetoothd. Running `bluetoothctl power on` before the
+# controller exists fails with "No default controller available" (exit 1), so
+# retry until a controller appears (power on returns 0 once it does). Bounded to
+# ~15s so a genuinely absent adapter doesn't hang the unit forever.
+ExecStart=/usr/bin/bash -c 'for i in $(seq 1 30); do bluetoothctl power on && exit 0; sleep 0.5; done; exit 1'
 
 [Install]
 WantedBy=suspend.target hibernate.target hybrid-sleep.target suspend-then-hibernate.target
