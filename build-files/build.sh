@@ -61,7 +61,6 @@ systemctl enable podman.socket
 systemctl enable -f --global podman.socket
 systemctl enable libvirtd
 systemctl enable bootc-upgrade.timer
-systemctl enable bluetooth-resume.service
 
 
 for repo in "${repos[@]}"; do
