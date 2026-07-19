@@ -1,0 +1,7 @@
+# Flatpaks installed on first boot via Fedora's native flatpak-preinstall.
+# Users can opt out by uninstalling; they won't be reinstalled automatically.
+# See man flatpak-preinstall(1).
+
+[Flatpak Preinstall com.onepassword.OnePassword]
+Branch=stable
+IsRuntime=false

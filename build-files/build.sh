@@ -31,13 +31,6 @@ for repo in "${repos[@]}"; do
     dnf5 -y copr enable $repo
 done
 
-curl -Lo 1password.sh https://raw.githubusercontent.com/blue-build/modules/e415231c2ea138c607efc52e6e533e3f0b4e69ee/modules/bling/installers/1password.sh
-
-chmod +x 1password.sh
-bash ./1password.sh
-
-rm 1password.sh
-
 dnf5 -y config-manager setopt "terra".enabled=true
 
 ### Install packages
