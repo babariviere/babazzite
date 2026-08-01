@@ -1,0 +1,7 @@
+# Set the I/O scheduler per block-device class.
+# BFQ is required for per-cgroup IOWeight and ionice priorities to be enforced;
+# none/mq-deadline/kyber ignore them. This lets foreground work (e.g. games in
+# games.slice) win disk bandwidth over background I/O (containers, syncthing,
+# bootc updates) under contention.
+ACTION=="add|change", KERNEL=="nvme[0-9]*n[0-9]*", ATTR{queue/scheduler}="bfq"
+ACTION=="add|change", KERNEL=="sd[a-z]|mmcblk[0-9]*", ATTR{queue/scheduler}="bfq"

@@ -1,0 +1,10 @@
+[Unit]
+Description=Slice for games with elevated I/O and CPU priority
+Documentation=man:systemd.slice(5)
+
+[Slice]
+# Requires the BFQ I/O scheduler (see 60-ioschedulers.rules) for IOWeight to be
+# enforced. Launch a game into this slice from Steam launch options with:
+#   systemd-run --user --slice=games.slice --scope -- %command%
+IOWeight=1000
+CPUWeight=200
