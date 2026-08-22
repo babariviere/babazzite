@@ -39,8 +39,6 @@ cat /etc/yum.repos.d/terra.repo
 
 grep -v '^#' /ctx/packages | xargs dnf5 install -y
 
-dnf5 group install -y c-development development-tools virtualization
-
 #### Setup environment
 
 cat >>/etc/environment <<EOF
@@ -57,7 +55,6 @@ mkdir /usr/lib/systemd/user/niri.service.wants
 systemctl enable podman.socket
 systemctl enable -f --global podman.socket
 systemctl enable libvirtd
-systemctl enable bootc-upgrade.timer
 
 
 for repo in "${repos[@]}"; do

@@ -85,8 +85,19 @@ lsp-plugins-vst
 lsp-plugins-vst3
 
 # classic dev tools
+# (replaces the c-development/development-tools/virtualization groups; qemu is
+# intentionally omitted, matching the commented-out emulation section below)
 gcc
+gcc-c++
+gdb
 make
+cmake
+autoconf
+automake
+libtool
+pkgconf-pkg-config
+patch
+git-core
 openssh
 openssh-askpass
 
