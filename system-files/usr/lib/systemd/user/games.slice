@@ -1,10 +1,11 @@
 [Unit]
-Description=Slice for games with elevated I/O and CPU priority
+Description=Slice for games with elevated CPU priority
 Documentation=man:systemd.slice(5)
 
 [Slice]
-# Requires the BFQ I/O scheduler (see 60-ioschedulers.rules) for IOWeight to be
-# enforced. Launch a game into this slice from Steam launch options with:
+# Launch a game into this slice from Steam launch options with:
 #   systemd-run --user --slice=games.slice --scope -- %command%
-IOWeight=1000
+# Note: IOWeight is intentionally omitted. Bazzite uses the kyber I/O
+# scheduler for NVMe, which (like none/mq-deadline) ignores cgroup IOWeight;
+# only BFQ enforces it. CPUWeight still applies.
 CPUWeight=200
