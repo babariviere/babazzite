@@ -1,0 +1,46 @@
+# Wolf: Moonlight streaming host that spawns on-demand containerised desktops.
+# https://games-on-whales.github.io/wolf/stable/
+#
+# Quadlet lives in /usr/share/containers/systemd so it ships with the image;
+# the [Install] section below is handled by the Quadlet generator, so no
+# `systemctl enable` is needed (and none is possible for generated units).
+#
+# State lives in /var/lib/wolf (persistent machine state), mounted where Wolf
+# expects its config, /etc/wolf.
+
+[Unit]
+Description=Wolf / Games On Whales
+Requires=network-online.target podman.socket
+After=network-online.target podman.socket
+
+[Service]
+TimeoutStartSec=900
+ExecStartPre=-/usr/bin/podman rm --force WolfPulseAudio
+Restart=on-failure
+RestartSec=5
+StartLimitBurst=5
+
+[Container]
+AutoUpdate=registry
+ContainerName=%p
+HostName=%p
+Image=ghcr.io/games-on-whales/wolf:stable
+Network=host
+SecurityLabelDisable=true
+PodmanArgs=--ipc=host --device-cgroup-rule "c 13:* rmw"
+AddDevice=/dev/dri
+AddDevice=/dev/uinput
+AddDevice=/dev/uhid
+Volume=/dev/:/dev/:rw
+Volume=/run/udev:/run/udev:rw
+Volume=/var/lib/wolf/:/etc/wolf:rw
+Volume=/run/podman/podman.sock:/var/run/docker.sock:ro
+Environment=WOLF_STOP_CONTAINER_ON_EXIT=TRUE
+# Wolf normally resolves this by inspecting its own container's mounts; pin it so
+# per-app state lands in /var/lib/wolf/profile_data even if that lookup fails.
+Environment=HOST_APPS_STATE_FOLDER=/var/lib/wolf
+# Radeon RX 7800 XT (0000:03:00.0). The iGPU is renderD129 (0000:0e:00.0).
+Environment=WOLF_RENDER_NODE=/dev/dri/renderD128
+
+[Install]
+WantedBy=multi-user.target

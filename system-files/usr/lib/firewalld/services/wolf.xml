@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<service>
+  <short>Wolf</short>
+  <description>Wolf / Games On Whales Moonlight streaming host.</description>
+  <port protocol="tcp" port="47984"/>
+  <port protocol="tcp" port="47989"/>
+  <port protocol="udp" port="47999"/>
+  <port protocol="tcp" port="48010"/>
+  <port protocol="udp" port="48100"/>
+  <port protocol="udp" port="48200"/>
+</service>

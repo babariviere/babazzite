@@ -56,6 +56,15 @@ systemctl enable podman.socket
 systemctl enable -f --global podman.socket
 systemctl enable libvirtd
 
+#### Wolf (Moonlight streaming host)
+# The container itself is a Quadlet shipped in
+# system-files/usr/share/containers/systemd/wolf.container; the Quadlet
+# generator handles its [Install] section, so there is nothing to enable here.
+# Only the firewall needs opening, for Moonlight clients on the LAN.
+if command -v firewall-offline-cmd >/dev/null 2>&1; then
+    firewall-offline-cmd --add-service=wolf
+fi
+
 
 for repo in "${repos[@]}"; do
     dnf5 -y copr disable $repo
