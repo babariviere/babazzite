@@ -5,8 +5,12 @@
 # the [Install] section below is handled by the Quadlet generator, so no
 # `systemctl enable` is needed (and none is possible for generated units).
 #
-# State lives in /var/lib/wolf (persistent machine state), mounted where Wolf
-# expects its config, /etc/wolf.
+# State lives in /var/lib/wolf (persistent machine state) and is mounted at the
+# SAME path inside the container. Upstream documents /var/lib/wolf:/etc/wolf, but
+# Wolf recovers the host-side path by matching a mount destination against
+# HOST_APPS_STATE_FOLDER: mismatched paths log
+# "Unable to find docker mount for path" and the app containers then get wrong
+# bind mounts for /home/retro.
 
 [Unit]
 Description=Wolf / Games On Whales
@@ -33,12 +37,18 @@ AddDevice=/dev/uinput
 AddDevice=/dev/uhid
 Volume=/dev/:/dev/:rw
 Volume=/run/udev:/run/udev:rw
-Volume=/var/lib/wolf/:/etc/wolf:rw
+Volume=/var/lib/wolf:/var/lib/wolf:rw
 Volume=/run/podman/podman.sock:/var/run/docker.sock:ro
 Environment=WOLF_STOP_CONTAINER_ON_EXIT=TRUE
-# Wolf normally resolves this by inspecting its own container's mounts; pin it so
-# per-app state lands in /var/lib/wolf/profile_data even if that lookup fails.
+# Wolf resolves the HOST path of its state by looking for a mount whose
+# destination matches this value, so the bind mount above must use the same path
+# on both sides. It also derives cfg/cert/key locations from it; those are pinned
+# explicitly below so a change in that default cannot strand them in the
+# container's ephemeral filesystem.
 Environment=HOST_APPS_STATE_FOLDER=/var/lib/wolf
+Environment=WOLF_CFG_FILE=/var/lib/wolf/cfg/config.toml
+Environment=WOLF_PRIVATE_CERT_FILE=/var/lib/wolf/cfg/cert.pem
+Environment=WOLF_PRIVATE_KEY_FILE=/var/lib/wolf/cfg/key.pem
 # Radeon RX 7800 XT (0000:03:00.0). The iGPU is renderD129 (0000:0e:00.0).
 Environment=WOLF_RENDER_NODE=/dev/dri/renderD128
 
