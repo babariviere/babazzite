@@ -31,6 +31,13 @@ cliphist
 xdg-desktop-portal-wlr
 xdg-desktop-portal-gtk
 
+# streaming
+# host + web console + plugin runner; punktfunk-web and punktfunk-scripting are
+# only weak deps of punktfunk, so they are named explicitly
+punktfunk
+punktfunk-web
+punktfunk-scripting
+
 # containers
 podman
 podman-bootc

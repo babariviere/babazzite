@@ -33,6 +33,23 @@ done
 
 dnf5 -y config-manager setopt "terra".enabled=true
 
+#### Punktfunk repo
+# Moonlight-compatible streaming host, installed from unom's Gitea RPM registry
+# rather than the COPR: only the registry carries the punktfunk-web console
+# (COPR's mock chroot has no bun). The "bazzite" group is the Fedora 43 build;
+# bump it to fedora-44 when the base rebases.
+# https://docs.punktfunk.unom.io/docs/bazzite
+cat >/etc/yum.repos.d/punktfunk.repo <<'EOF'
+[punktfunk]
+name=punktfunk (unom)
+baseurl=https://git.unom.io/api/packages/unom/rpm/bazzite
+enabled=1
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=https://git.unom.io/api/packages/unom/rpm/repository.key
+       https://git.unom.io/api/packages/unom/generic/punktfunk-keys/1/RPM-GPG-KEY-punktfunk
+EOF
+
 ### Install packages
 
 cat /etc/yum.repos.d/terra.repo
@@ -56,11 +73,20 @@ systemctl enable podman.socket
 systemctl enable -f --global podman.socket
 systemctl enable libvirtd
 
-# Wolf needs no enablement here: it ships as a Quadlet in
-# system-files/usr/share/containers/systemd/wolf.container and the Quadlet
-# generator handles its [Install] section. Its firewall rule is applied in the
-# Containerfile, since the service definition only exists after
-# COPY system-files/usr.
+# Punktfunk runs as systemd *user* units inside the graphical session (the host
+# needs the session's compositor, PipeWire graph and /dev/uinput). Enabling them
+# globally means every user gets them on login; the udev rule ships with the RPM.
+# Streaming still needs the user in the `input` group:
+#     ujust add-user-to-input-group
+systemctl enable -f --global punktfunk-host
+systemctl enable -f --global punktfunk-web
+
+# Firewall: the punktfunk RPM ships the service definitions, so this can run here
+# (unlike the old Wolf rule, which lived in a COPY'd system-files XML).
+# punktfunk-gamestream is the Moonlight-compatible port set.
+firewall-offline-cmd --add-service=punktfunk-native
+firewall-offline-cmd --add-service=punktfunk-web
+firewall-offline-cmd --add-service=punktfunk-gamestream
 
 
 for repo in "${repos[@]}"; do

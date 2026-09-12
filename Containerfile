@@ -18,10 +18,7 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
 COPY system-files/usr /usr
 
 # Layer 3: enable units shipped via system-files, then finalize the ostree commit.
-# The firewalld rule has to live here rather than in build.sh: it references
-# /usr/lib/firewalld/services/wolf.xml, which only exists after the COPY above.
 RUN systemctl enable bootc-upgrade.timer && \
-    firewall-offline-cmd --add-service=wolf && \
     ostree container commit
 
 ### LINTING
