@@ -36,13 +36,14 @@ dnf5 -y config-manager setopt "terra".enabled=true
 #### Punktfunk repo
 # Moonlight-compatible streaming host, installed from unom's Gitea RPM registry
 # rather than the COPR: only the registry carries the punktfunk-web console
-# (COPR's mock chroot has no bun). The "bazzite" group is the Fedora 43 build;
-# bump it to fedora-44 when the base rebases.
+# (COPR's mock chroot has no bun). The registry has one group per Fedora
+# release; the Bazzite base is currently Fedora 44, so track fedora-44 (the
+# "bazzite" group is the Fedora 43 build). Bump this on the next major rebase.
 # https://docs.punktfunk.unom.io/docs/bazzite
 cat >/etc/yum.repos.d/punktfunk.repo <<'EOF'
 [punktfunk]
 name=punktfunk (unom)
-baseurl=https://git.unom.io/api/packages/unom/rpm/bazzite
+baseurl=https://git.unom.io/api/packages/unom/rpm/fedora-44
 enabled=1
 gpgcheck=1
 repo_gpgcheck=1
