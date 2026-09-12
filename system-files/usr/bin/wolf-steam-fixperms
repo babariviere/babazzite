@@ -12,16 +12,20 @@
 #
 # With no argument, lists the profiles that have a WolfSteam directory.
 #
-# Upstream ships an equivalent script that hardcodes BASE=/etc/wolf and looks
-# for 'profile-data' instead of Wolf's actual 'profile_data':
+# Upstream ships an equivalent script that hardcodes BASE=/etc/wolf:
 # https://games-on-whales.github.io/wolf/stable/apps/steam.html
+#
+# Note the directory is 'profile-data' with a hyphen, as upstream's script has
+# it. Wolf's own documentation calls it 'profile_data'; that spelling is wrong.
+# Both are accepted below in case it ever changes.
 
 set -euo pipefail
 
 # Where the wolf.container quadlet keeps Wolf's persistent state; this is the
 # host side of the volume mounted at /etc/wolf inside the container.
 BASE="${WOLF_STATE_DIR:-/var/lib/wolf}"
-PROFILE_DATA="${BASE}/profile_data"
+PROFILE_DATA="${BASE}/profile-data"
+[ -d "${PROFILE_DATA}" ] || PROFILE_DATA="${BASE}/profile_data"
 
 die() {
     echo "wolf-steam-fixperms: $*" >&2
