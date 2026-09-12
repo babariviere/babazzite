@@ -110,59 +110,101 @@ jobs:
           labels: ${{ steps.metadata.outputs.labels }}
           oci: true
 
-      # Rechunk splits the image into ~equal-sized chunks instead of one huge
-      # layer. With `prev-ref` it reuses the previous release's chunk plan, so
-      # unchanged content keeps identical layer digests across builds and GHCR
-      # skips uploading them. This is what makes the zstd:chunked push cheap.
-      # Docs: https://github.com/hhd-dev/rechunk
-      - name: Run Rechunker
-        id: rechunk
-        uses: hhd-dev/rechunk@5fbe1d3a639615d2548d83bc888360de6267b1a2 # v1.2.4
-        with:
-          rechunk: 'ghcr.io/hhd-dev/rechunk:v1.2.4'
-          ref: "localhost/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}"
-          # Missing on the very first build; rechunk warns and continues.
-          prev-ref: "${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}"
-          # The push step recompresses with zstd:chunked anyway.
-          skip_compression: true
-          version: "${{ env.DEFAULT_TAG }}.<date>"
-          # Rechunk strips out all the labels during build, this needs to be reapplied here with newline separator
-          labels: ${{ steps.metadata.outputs.labels }}
-
-      # This is necessary so that the podman socket can find the rechunked image on its storage
-      - name: Load in podman and tag
+      # Chunk the image the same way Bazzite does: rpm-ostree groups the
+      # rootfs into ~127 content-addressed layers annotated with the packages
+      # they contain. Unchanged packages land in identical layers across
+      # builds, so GHCR skips re-uploading them.
+      - name: Chunk image
+        id: chunk
+        env:
+          SRC: localhost/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}
+          LABELS: ${{ steps.metadata.outputs.labels }}
+          TAGS: ${{ steps.metadata.outputs.tags }}
         run: |
-          IMAGE=$(podman pull ${{ steps.rechunk.outputs.ref }})
-          sudo rm -rf ${{ steps.rechunk.outputs.location }}
-          for tag in ${{ steps.metadata.outputs.tags }}; do
-            podman tag $IMAGE ${{ env.IMAGE_NAME }}:$tag
+          set -euo pipefail
+
+          # /run and /tmp must be empty in a bootc image; the build leaves junk there.
+          buildah unshare bash -euo pipefail -c '
+            container=$(buildah from "$SRC")
+            mnt=$(buildah mount "$container")
+            rm -rf "$mnt"/run/.* "$mnt"/run/* "$mnt"/tmp/.* "$mnt"/tmp/* || true
+            buildah umount "$container"
+            buildah commit --identity-label=false --rm "$container" "$SRC"
+          '
+
+          CHUNK_DIR="$(mktemp -d "${RUNNER_TEMP}/chunk-XXXXXX")"
+
+          # rpm-ostree strips labels, so reapply the metadata ones here.
+          label_args=()
+          while IFS= read -r line; do
+            if [ -n "$line" ]; then
+              label_args+=(--label "$line")
+            fi
+          done <<< "${LABELS}"
+
+          podman run --rm \
+            --pull=never \
+            --privileged \
+            --mount=type=image,src="${SRC}",target=/rpm-ostree \
+            --volume "${CHUNK_DIR}:/run/out:Z" \
+            --entrypoint /usr/bin/rpm-ostree \
+            "${SRC}" \
+            compose build-chunked-oci \
+            --bootc --max-layers 127 --format-version 2 \
+            "${label_args[@]}" \
+            --rootfs /rpm-ostree --output oci-archive:/run/out/chunked.oci
+
+          # Free the unchunked copy before pulling the chunked one back in;
+          # the runner does not have room for both.
+          podman images --format '{{.ID}}' "localhost/${IMAGE_NAME}" | sort -u | xargs -r podman rmi -f
+
+          CHUNKED=$(podman pull oci-archive:"${CHUNK_DIR}/chunked.oci")
+          rm -rf "${CHUNK_DIR}"
+
+          for tag in ${TAGS}; do
+            podman tag "${CHUNKED}" "${IMAGE_NAME}:${tag}"
           done
 
       # These `if` statements are so that pull requests for your custom images do not make it publish any packages under your name without you knowing
       # They also check if the runner is on the default branch so that things like the merge queue (if you enable it), are going to work
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u "${{ github.actor }}" --password-stdin
 
+      # Push one tag, then alias the rest server-side with skopeo: the registry
+      # mounts the existing blobs instead of us re-uploading the image per tag.
       - name: Push To GHCR
-        uses: redhat-actions/push-to-registry@5ed88d269cf581ea9ef6dd6806d01562096bee9c # v2
         if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         id: push
+        uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4.0.0
         env:
-          REGISTRY_USER: ${{ github.actor }}
-          REGISTRY_PASSWORD: ${{ github.token }}
+          TAGS: ${{ steps.metadata.outputs.tags }}
         with:
-          registry: ${{ env.IMAGE_REGISTRY }}
-          image: ${{ env.IMAGE_NAME }}
-          tags: ${{ steps.metadata.outputs.tags }}
-          username: ${{ env.REGISTRY_USER }}
-          password: ${{ env.REGISTRY_PASSWORD }}
-          extra-args: |
-            --compression-format=zstd:chunked
+          max_attempts: 3
+          retry_wait_seconds: 15
+          timeout_minutes: 30
+          command: |
+            set -euo pipefail
+
+            IMAGE_FULL="${IMAGE_REGISTRY}/${IMAGE_NAME}"
+            read -r primary _ <<< "${TAGS}"
+
+            podman push --digestfile=/tmp/digestfile \
+              "${IMAGE_NAME}:${primary}" "docker://${IMAGE_FULL}:${primary}"
+
+            digest="$(< /tmp/digestfile)"
+            if [[ -z "$digest" ]]; then
+              echo "push reported success but wrote no digest" >&2
+              exit 1
+            fi
+
+            for tag in ${TAGS}; do
+              [[ "$tag" == "$primary" ]] && continue
+              skopeo copy "docker://${IMAGE_FULL}@${digest}" "docker://${IMAGE_FULL}:${tag}"
+            done
+
+            echo "digest=${digest}" >> "$GITHUB_OUTPUT"
 
       # This section is optional and only needs to be enabled if you plan on distributing
       # your project for others to consume. You will need to create a public and private key
@@ -172,14 +214,11 @@ jobs:
         uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0
         if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
 
+      # Signing the digest once covers every tag that points at it.
       - name: Sign container image
         if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         run: |
-          IMAGE_FULL="${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}"
-          for tag in ${{ steps.metadata.outputs.tags }}; do
-            cosign sign -y --key env://COSIGN_PRIVATE_KEY $IMAGE_FULL:$tag
-          done
+          cosign sign -y --key env://COSIGN_PRIVATE_KEY \
+            "${IMAGE_REGISTRY}/${IMAGE_NAME}@${{ steps.push.outputs.digest }}"
         env:
-          TAGS: ${{ steps.push.outputs.digest }}
-          COSIGN_EXPERIMENTAL: false
           COSIGN_PRIVATE_KEY: ${{ secrets.SIGNING_SECRET }}
