@@ -38,6 +38,21 @@ punktfunk
 punktfunk-web
 punktfunk-scripting
 
+# game mode
+# Bazzite's Steam Game Mode session does not survive this image: Terra (enabled in
+# build.sh) ships terra-gamescope, which Conflicts: gamescope, so dnf swaps out the
+# base image's gamescope and drops gamescope-session-plus with it. Pull the session
+# back in explicitly. terra-gamescope Provides: gamescope, so it satisfies the dep
+# without reintroducing the conflict.
+#   gamescope-session       -> /usr/bin/gamescope-session-plus + the user units
+#   gamescope-session-steam -> the wayland-session entry and the sessions.d/steam
+#                              defaults that punktfunk's own drop-in at
+#                              /etc/gamescope-session-plus/sessions.d/steam overrides
+#                              to fall back to the headless backend on a box with no
+#                              display connected
+gamescope-session
+gamescope-session-steam
+
 # containers
 podman
 podman-bootc

@@ -84,10 +84,20 @@ systemctl enable -f --global punktfunk-web
 
 # Firewall: the punktfunk RPM ships the service definitions, so this can run here
 # (unlike the old Wolf rule, which lived in a COPY'd system-files XML).
-# punktfunk-gamestream is the Moonlight-compatible port set.
+# punktfunk-gamestream (the Moonlight-compatible port set) is deliberately NOT
+# opened: this host serves the native punktfunk/1 clients only, and the
+# GameStream planes carry plain-HTTP pairing plus legacy GCM nonce reuse.
 firewall-offline-cmd --add-service=punktfunk-native
 firewall-offline-cmd --add-service=punktfunk-web
-firewall-offline-cmd --add-service=punktfunk-gamestream
+
+# The punktfunk media DATA plane binds an EPHEMERAL UDP port per session, which
+# punktfunk-native deliberately does not cover, so inbound hole-punch packets are
+# dropped ("no hole-punch reached this host's data port" in the host log) and the
+# client falls back to an unconfirmed return path. Pin it to one port with
+#     PUNKTFUNK_DATA_PORT=9778
+# in ~/.config/punktfunk/host.env, and open only that port here, alongside the
+# 9777 QUIC control port that punktfunk-native already covers.
+firewall-offline-cmd --add-port=9778/udp
 
 
 for repo in "${repos[@]}"; do
