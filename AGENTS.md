@@ -3,7 +3,7 @@
 ## What this is
 
 babazzite is a custom [bootc](https://bootc-dev.github.io/bootc/) OS image: a
-personal derivation of [Bazzite](https://bazzite.gg/) (`ghcr.io/ublue-os/bazzite-gnome:unstable`)
+personal derivation of [Bazzite](https://bazzite.gg/) (`ghcr.io/ublue-os/bazzite:stable`)
 tweaked to run the [niri](https://github.com/YaLTeR/niri) Wayland compositor.
 It is built from a `Containerfile`, published to GHCR by GitHub Actions, and
 installed/upgraded on real machines via `bootc`.

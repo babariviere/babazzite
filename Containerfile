@@ -3,7 +3,7 @@ FROM scratch AS ctx
 COPY build-files /
 
 # Base Image
-FROM ghcr.io/ublue-os/bazzite-gnome:stable
+FROM ghcr.io/ublue-os/bazzite:stable
 
 # Layer 1: package installation and base setup.
 # This is the expensive step; keeping it first (before COPY system-files) means

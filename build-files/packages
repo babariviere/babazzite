@@ -39,11 +39,13 @@ punktfunk-web
 punktfunk-scripting
 
 # game mode
-# Bazzite's Steam Game Mode session does not survive this image: Terra (enabled in
-# build.sh) ships terra-gamescope, which Conflicts: gamescope, so dnf swaps out the
-# base image's gamescope and drops gamescope-session-plus with it. Pull the session
-# back in explicitly. terra-gamescope Provides: gamescope, so it satisfies the dep
-# without reintroducing the conflict.
+# Bazzite's Steam Game Mode session is deck-only: gamescope-session-ogui-steam is
+# installed in the bazzite-deck stage of Bazzite's Containerfile, not the desktop
+# bazzite stage this image derives from. The desktop image does ship the gamescope
+# binary (Bazzite installs terra-gamescope there itself), but nothing on top of it,
+# so pull the session in explicitly. terra-gamescope Provides: gamescope, which
+# satisfies gamescope-session's Requires: gamescope without reintroducing its
+# Conflicts: gamescope.
 #   gamescope-session       -> /usr/bin/gamescope-session-plus + the user units
 #   gamescope-session-steam -> the wayland-session entry and the sessions.d/steam
 #                              defaults that punktfunk's own drop-in at
