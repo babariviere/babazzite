@@ -200,8 +200,11 @@ jobs:
             IMAGE_FULL="${IMAGE_REGISTRY}/${IMAGE_NAME}"
             read -r primary _ <<< "${TAGS}"
 
+            # No tag suffix: rpm-ostree writes a single unnamed descriptor to
+            # index.json, so "oci:dir:latest" fails with "no descriptor found
+            # for reference latest".
             skopeo copy --digestfile=/tmp/digestfile \
-              "oci:${CHUNK_DIR}:latest" "docker://${IMAGE_FULL}:${primary}"
+              "oci:${CHUNK_DIR}" "docker://${IMAGE_FULL}:${primary}"
 
             digest="$(< /tmp/digestfile)"
             if [[ -z "$digest" ]]; then
