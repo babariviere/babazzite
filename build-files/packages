@@ -96,7 +96,10 @@ wireguard-tools
 
 # sound
 pipewire
-wireplumber
+# wireplumber is NOT listed: Bazzite now ships terra-wireplumber in the base, and
+# terra-wireplumber Conflicts: wireplumber. Asking for it by name makes dnf try to
+# pull Fedora's build on top of the installed Terra one, which is unsolvable and
+# fails the build. The base already provides a pipewire-session-manager.
 pamixer
 pavucontrol
 # Noise canceling
