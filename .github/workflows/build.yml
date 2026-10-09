@@ -114,25 +114,20 @@ jobs:
       # rootfs into ~127 content-addressed layers annotated with the packages
       # they contain. Unchanged packages land in identical layers across
       # builds, so GHCR skips re-uploading them.
+      #
+      # The output is an oci: directory rather than an oci-archive: tarball,
+      # and it is never imported back into containers-storage. skopeo pushes
+      # straight out of the directory in the next step, which avoids writing
+      # and then re-reading a full copy of a ~10GB image.
       - name: Chunk image
         id: chunk
         env:
           SRC: localhost/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}
           LABELS: ${{ steps.metadata.outputs.labels }}
-          TAGS: ${{ steps.metadata.outputs.tags }}
         run: |
           set -euo pipefail
 
-          # /run and /tmp must be empty in a bootc image; the build leaves junk there.
-          buildah unshare bash -euo pipefail -c '
-            container=$(buildah from "$SRC")
-            mnt=$(buildah mount "$container")
-            rm -rf "$mnt"/run/.* "$mnt"/run/* "$mnt"/tmp/.* "$mnt"/tmp/* || true
-            buildah umount "$container"
-            buildah commit --identity-label=false --rm "$container" "$SRC"
-          '
-
-          CHUNK_DIR="$(mktemp -d "${RUNNER_TEMP}/chunk-XXXXXX")"
+          CHUNK_DIR="$(mktemp -d "${RUNNER_TEMP}/chunk-XXXXXX")/oci"
 
           # rpm-ostree strips labels, so reapply the metadata ones here.
           label_args=()
@@ -142,28 +137,36 @@ jobs:
             fi
           done <<< "${LABELS}"
 
+          # Reuse the published image's layer plan so unchanged packages keep
+          # landing in byte-identical layers. Without this, rpm-ostree is free
+          # to repack chunks differently on every run and the registry ends up
+          # re-uploading layers whose contents never changed (and every user
+          # re-downloads them on bootc upgrade). Skipped on the first build,
+          # when there is nothing published to compare against.
+          prev_args=()
+          if skopeo inspect --raw "docker://${IMAGE_REGISTRY}/${IMAGE_NAME}:${DEFAULT_TAG}" >/dev/null 2>&1; then
+            prev_args+=(--previous-build "docker://${IMAGE_REGISTRY}/${IMAGE_NAME}:${DEFAULT_TAG}")
+          else
+            echo "No published ${DEFAULT_TAG} tag yet; chunking without a previous build."
+          fi
+
           podman run --rm \
             --pull=never \
             --privileged \
             --mount=type=image,src="${SRC}",target=/rpm-ostree \
-            --volume "${CHUNK_DIR}:/run/out:Z" \
+            --volume "$(dirname "${CHUNK_DIR}"):/run/out:Z" \
             --entrypoint /usr/bin/rpm-ostree \
             "${SRC}" \
             compose build-chunked-oci \
             --bootc --max-layers 127 --format-version 2 \
-            "${label_args[@]}" \
-            --rootfs /rpm-ostree --output oci-archive:/run/out/chunked.oci
+            "${label_args[@]}" "${prev_args[@]}" \
+            --rootfs /rpm-ostree --output oci:/run/out/oci
 
-          # Free the unchunked copy before pulling the chunked one back in;
-          # the runner does not have room for both.
+          # The unchunked copy is dead weight from here on and the runner is
+          # tight on disk.
           podman images --format '{{.ID}}' "localhost/${IMAGE_NAME}" | sort -u | xargs -r podman rmi -f
 
-          CHUNKED=$(podman pull oci-archive:"${CHUNK_DIR}/chunked.oci")
-          rm -rf "${CHUNK_DIR}"
-
-          for tag in ${TAGS}; do
-            podman tag "${CHUNKED}" "${IMAGE_NAME}:${tag}"
-          done
+          echo "dir=${CHUNK_DIR}" >> "$GITHUB_OUTPUT"
 
       # These `if` statements are so that pull requests for your custom images do not make it publish any packages under your name without you knowing
       # They also check if the runner is on the default branch so that things like the merge queue (if you enable it), are going to work
@@ -177,14 +180,16 @@ jobs:
             -u "${{ github.actor }}" --password-stdin \
             --authfile "${HOME}/.docker/config.json"
 
-      # Push one tag, then alias the rest server-side with skopeo: the registry
-      # mounts the existing blobs instead of us re-uploading the image per tag.
+      # Push one tag straight out of the chunked oci directory, then alias the
+      # rest server-side with skopeo: the registry mounts the existing blobs
+      # instead of us re-uploading the image per tag.
       - name: Push To GHCR
         if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         id: push
         uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4.0.0
         env:
           TAGS: ${{ steps.metadata.outputs.tags }}
+          CHUNK_DIR: ${{ steps.chunk.outputs.dir }}
         with:
           max_attempts: 3
           retry_wait_seconds: 15
@@ -195,8 +200,8 @@ jobs:
             IMAGE_FULL="${IMAGE_REGISTRY}/${IMAGE_NAME}"
             read -r primary _ <<< "${TAGS}"
 
-            podman push --digestfile=/tmp/digestfile \
-              "${IMAGE_NAME}:${primary}" "docker://${IMAGE_FULL}:${primary}"
+            skopeo copy --digestfile=/tmp/digestfile \
+              "oci:${CHUNK_DIR}:latest" "docker://${IMAGE_FULL}:${primary}"
 
             digest="$(< /tmp/digestfile)"
             if [[ -z "$digest" ]]; then
