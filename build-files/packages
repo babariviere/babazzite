@@ -14,7 +14,6 @@ nerd-fonts
 # desktop
 # theming for the Plasma setup in dotfiles (run_onchange_after_kde_setup.sh);
 # Darkly and the Catppuccin Papirus folders are installed in build.sh
-klassy
 papirus-icon-theme
 # Fedora ships Papirus-Dark as a subpackage that papirus-icon-theme only weakly
 # depends on, and Bazzite installs without weak deps; build.sh recolours it.

@@ -26,7 +26,6 @@ ln -fs "$optfix_dir" /opt
 # terra disabled (only terra-mesa is on); 1password, ghostty and the gamescope
 # session packages come from it.
 coprs=(
-    errornointernet/klassy
     gmaglione/podman-bootc
     imput/helium
 )
