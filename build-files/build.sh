@@ -22,8 +22,9 @@ ln -fs "$optfix_dir" /opt
 
 #### Third-party repos
 # Enabled only for the duration of the build and disabled again at the end, so
-# the shipped image only carries the repos Bazzite itself enables. Terra is
-# Bazzite's own repo and is already enabled in the base.
+# the shipped image only carries the repos Bazzite itself enables. Bazzite ships
+# terra disabled (only terra-mesa is on); 1password, ghostty and the gamescope
+# session packages come from it.
 coprs=(
     gmaglione/podman-bootc
     imput/helium
@@ -32,6 +33,7 @@ coprs=(
 for copr in "${coprs[@]}"; do
     dnf5 -y copr enable "$copr"
 done
+dnf5 -y config-manager setopt terra.enabled=1
 
 # Punktfunk: Moonlight-compatible streaming host, installed from unom's Gitea RPM
 # registry rather than the COPR: only the registry carries the punktfunk-web
@@ -108,6 +110,7 @@ for copr in "${coprs[@]}"; do
     dnf5 -y copr disable "$copr"
 done
 dnf5 -y config-manager setopt punktfunk.enabled=0
+dnf5 -y config-manager setopt terra.enabled=0
 
 #### Optfix (post): recreate /opt/<name> symlinks on the live system
 # Generate a tmpfiles.d entry for each payload under /usr/lib/opt so that

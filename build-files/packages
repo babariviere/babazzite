@@ -11,6 +11,10 @@ helium-bin
 fontawesome-fonts-all
 nerd-fonts
 
+# desktop
+# icon theme for the Plasma setup in dotfiles (run_onchange_after_kde_setup.sh)
+papirus-icon-theme
+
 # utility
 fuse-sshfs
 vulkan-tools
