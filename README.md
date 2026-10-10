@@ -28,7 +28,10 @@ On top of it, the image bundles:
 - **Devbox**: compilers, Rust, and `-devel` packages live in a distrobox
   rather than the image. `ujust devbox` creates (or recreates) it from
   `/usr/share/babazzite/distrobox/dev.ini`.
-- **Automatic updates**: `bootc-upgrade.timer` applies new images daily.
+- **Automatic updates**: Bazzite's `uupd.timer` applies new images daily, and
+  also updates flatpaks and distroboxes (including the devbox).
+- **zram tuning**: `vm.swappiness=180` and `vm.page-cluster=0`, since swap is
+  zram only.
 - **Signature policy**: the image ships a `policy.json` entry requiring the
   cosign signature for `ghcr.io/babariviere/babazzite`.
 
@@ -63,7 +66,7 @@ sudo systemctl reboot
 every upgrade. It needs the policy shipped by the image, so when coming from
 plain Bazzite, switch once without the flag, reboot, then switch again with it.
 
-Afterwards updates are automatic via `bootc-upgrade.timer`. To force one:
+Afterwards updates are automatic via `uupd.timer`. To force one:
 
 ```bash
 sudo bootc upgrade

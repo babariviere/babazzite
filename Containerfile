@@ -18,12 +18,11 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
 # Layer 2: system configuration files (cheap, changes often).
 COPY system-files/usr /usr
 
-# Layer 3: enable units shipped via system-files, then finalize the ostree commit.
+# Layer 3: finalize the ostree commit.
 # /run and /tmp must be empty in a bootc image, and the package installs above
 # leave junk in both. Clearing them here (rather than with an extra buildah
 # commit in CI) avoids rewriting the whole image a second time at build time.
-RUN systemctl enable bootc-upgrade.timer && \
-    { find /run /tmp -mindepth 1 -xdev -delete 2>/dev/null || true; } && \
+RUN { find /run /tmp -mindepth 1 -xdev -delete 2>/dev/null || true; } && \
     ostree container commit
 
 ### LINTING
