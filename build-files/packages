@@ -16,10 +16,8 @@ nerd-fonts
 # Darkly and the Catppuccin Papirus folders are installed in build.sh
 klassy
 papirus-icon-theme
-# Fedora ships Papirus-Dark as a subpackage; papirus-folders recolours it in build.sh
-papirus-icon-theme-dark
-# Papirus-Dark is only a weak dependency of papirus-icon-theme, and Bazzite
-# installs without weak dependencies.
+# Fedora ships Papirus-Dark as a subpackage that papirus-icon-theme only weakly
+# depends on, and Bazzite installs without weak deps; build.sh recolours it.
 papirus-icon-theme-dark
 
 # utility
