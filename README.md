@@ -1,7 +1,7 @@
 # babazzite
 
 A personal [bootc](https://bootc-dev.github.io/bootc/) OS image: [Bazzite](https://bazzite.gg/)
-with the [niri](https://github.com/YaLTeR/niri) scrolling Wayland compositor on top.
+(KDE Plasma) with game mode, game streaming, and virtualization layered on top.
 
 ```
 ghcr.io/babariviere/babazzite:stable
@@ -15,14 +15,8 @@ GHCR and deployed to real machines with `bootc`.
 
 The base is `ghcr.io/ublue-os/bazzite:stable`, the KDE Plasma desktop variant of
 Bazzite, which brings the gaming stack (Steam, Proton, gamescope, the Bazzite
-kernel with HDR patches, amdgpu tuning). On top of that, babazzite layers a niri
-session and the pieces a bare compositor needs to be a usable desktop: portals,
-a notification path, clipboard tooling, audio, polkit, networking applets.
-
-Both sessions ship. Plasma stays available from the login screen, and niri is
-the day-to-day one.
-
-Beyond the desktop, the image bundles:
+kernel with HDR patches, amdgpu tuning). Plasma is the only desktop session.
+On top of it, the image bundles:
 
 - **Game mode** via `gamescope-session` + `gamescope-session-steam`, selectable
   as its own session. Bazzite only ships this in its `-deck` images, so it is
@@ -30,22 +24,26 @@ Beyond the desktop, the image bundles:
 - **Remote play** with [punktfunk](https://docs.punktfunk.unom.io/), running as
   systemd user units inside the graphical session, with firewall rules and a
   pinned data port.
-- **Containers and VMs**: podman, podman-bootc, incus, libvirt, virt-manager.
-- **Dev toolchain**: compilers, Rust, and the assorted `-devel` packages needed
-  by projects built on this machine.
+- **Containers and VMs**: podman, podman-bootc, libvirt, virt-manager.
+- **Devbox**: compilers, Rust, and `-devel` packages live in a distrobox
+  rather than the image. `ujust devbox` creates (or recreates) it from
+  `/usr/share/babazzite/distrobox/dev.ini`.
 - **Automatic updates**: `bootc-upgrade.timer` applies new images daily.
+- **Signature policy**: the image ships a `policy.json` entry requiring the
+  cosign signature for `ghcr.io/babariviere/babazzite`.
 
 ## Layout
 
 | Path | Purpose |
 |---|---|
 | `Containerfile` | Image definition. Three layers: packages, config files, unit enablement. |
-| `build-files/build.sh` | Build-time script: enable repos, install packages, relocate `/opt`, enable units, open firewall ports. |
-| `build-files/packages` | Newline-separated RPM list, grouped under comment headers. Commented lines are deliberately disabled, not dead. |
+| `build-files/build.sh` | Build-time script: enable repos, install packages, relocate `/opt`, enable units, open firewall ports, install the signature policy, disable build-only repos. |
+| `build-files/packages` | Newline-separated RPM list, grouped under comment headers. |
 | `system-files/usr/` | Files baked into the image at their final absolute paths, minus the `system-files` prefix. |
 | `disk-config/` | bootc-image-builder configs for qcow2/raw/iso output. |
 | `Justfile` | Build, run, lint, format recipes. Mostly upstream template. |
 | `.github/workflows/build.yml` | Builds, signs with cosign, pushes to GHCR. Runs on push and daily at 10:05 UTC. |
+| `.github/workflows/lint.yml` | Runs `just lint` (shellcheck) and `just check` on pushes and PRs. |
 | `.github/workflows/build-disk.yml` | Generates disk images, optionally uploaded to S3. |
 
 The Containerfile is ordered so that the expensive package-install layer comes
@@ -57,9 +55,13 @@ invalidate the RPM cache.
 On an existing Fedora Atomic or Bazzite system:
 
 ```bash
-sudo bootc switch ghcr.io/babariviere/babazzite:stable
+sudo bootc switch --enforce-container-sigpolicy ghcr.io/babariviere/babazzite:stable
 sudo systemctl reboot
 ```
+
+`--enforce-container-sigpolicy` makes bootc verify the cosign signature on
+every upgrade. It needs the policy shipped by the image, so when coming from
+plain Bazzite, switch once without the flag, reboot, then switch again with it.
 
 Afterwards updates are automatic via `bootc-upgrade.timer`. To force one:
 
@@ -105,18 +107,18 @@ Commits follow conventional commit format.
 
 ## Gotchas worth knowing
 
-**The punktfunk repo is pinned to a Fedora release.** `build.sh` tracks
-`fedora-44` to match the current Bazzite base. Bump it on the next major rebase.
+**The punktfunk repo follows the base's Fedora release.** `build.sh` derives the
+registry group from `rpm -E %fedora`, so a rebase fails loudly if unom has not
+published that release yet.
 
 **Game mode packages are deliberate.** `gamescope-session` and
 `gamescope-session-steam` exist in `packages` because Bazzite installs the
 session only in its `bazzite-deck` stage. The desktop image ships the gamescope
 binary (`terra-gamescope`) with nothing on top of it.
 
-**GPU resets kill the niri session.** niri does not currently handle
-`VK_ERROR_DEVICE_LOST` / `GL_EXT_robustness`, so an amdgpu reset triggered by a
-misbehaving game takes the whole session with it. Running games under the
-gamescope session contains the damage to gamescope instead.
+**Host apps built in the devbox may need runtime libs on the host.** The devbox
+carries `-devel` packages, but binaries run on the host still need the shared
+libraries there (for example `webkit2gtk4.1` for anno, listed in `packages`).
 
 ## Verification
 

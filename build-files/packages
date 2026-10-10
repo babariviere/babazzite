@@ -1,35 +1,22 @@
-# Compositor
-niri
-xwayland-satellite
-
-# auth
-fprintd-pam
-helium-bin
+# Package list for build.sh. One RPM per line, grouped under comment headers.
+# Development toolchains live in the devbox (system-files/usr/share/babazzite/distrobox/dev.ini).
 
 # apps
-# firefox
-# emacs-pgtk
 1password
-foot
+fprintd-pam
 ghostty
-swaybg
-#syncthing
-noctalia
+helium-bin
 
 # fonts
-nerd-fonts
 fontawesome-fonts-all
+nerd-fonts
 
 # utility
-wev
+fuse-sshfs
+vulkan-tools
 wl-clipboard
-brightnessctl
-wlr-randr
-cliphist
-
-# portal
-xdg-desktop-portal-wlr
-xdg-desktop-portal-gtk
+# runtime for host apps built in the devbox (anno)
+webkit2gtk4.1
 
 # streaming
 # host + web console + plugin runner; punktfunk-web and punktfunk-scripting are
@@ -60,49 +47,20 @@ podman
 podman-bootc
 podman-docker
 podman-tui
-#devpod
 
-# # emulation
+# virtualization
 libvirt
 libvirt-daemon-config-network
-# qemu-char-spice
-# qemu-device-display-virtio-gpu
-# qemu-device-display-virtio-vga
-# qemu-device-usb-redirect
-# qemu-img
-# qemu-system-x86-core
-# qemu-user-binfmt
-# qemu-user-static
-# qemu
 virt-manager
 virt-viewer
 
-# env
-polkit
-mate-polkit
-xdg-user-dirs
-dbus-tools
-dbus-daemon
-libnotify
-vulkan-tools
-
 # networking
-network-manager-applet
-bluez
-bluez-tools
-blueman
 tailscale
 wireguard-tools
 
 # sound
-pipewire
-# wireplumber is NOT listed: Bazzite now ships terra-wireplumber in the base, and
-# terra-wireplumber Conflicts: wireplumber. Asking for it by name makes dnf try to
-# pull Fedora's build on top of the installed Terra one, which is unsolvable and
-# fails the build. The base already provides a pipewire-session-manager.
-pamixer
-pavucontrol
-# Noise canceling
+# wireplumber is NOT listed: Bazzite ships terra-wireplumber in the base, and
+# terra-wireplumber Conflicts: wireplumber, so naming it makes the build unsolvable.
 # The mic chain is a PipeWire filter-chain (see dotfiles:
 # .config/pipewire/pipewire.conf.d/99-mic-clean.conf), not easyeffects.
 # It needs the CAPS noisegate; RNNoise comes from a LADSPA plugin in ~/.ladspa.
@@ -114,46 +72,3 @@ lsp-plugins-gstreamer
 lsp-plugins-lv2
 lsp-plugins-vst
 lsp-plugins-vst3
-
-# classic dev tools
-# (replaces the c-development/development-tools/virtualization groups; qemu is
-# intentionally omitted, matching the commented-out emulation section below)
-gcc
-gcc-c++
-gdb
-make
-cmake
-autoconf
-automake
-libtool
-pkgconf-pkg-config
-patch
-git-core
-openssh
-openssh-askpass
-
-# bevy packages
-wayland-devel
-alsa-lib-devel
-libudev-devel
-
-# starship-jj deps
-libgit2
-
-# erlang deps
-ncurses-devel
-
-# homepod
-onnxruntime-devel
-llama-cpp
-
-# Rust toolchain (for building glimpse)
-rust
-cargo
-
-incus
-
-# anno
-webkit2gtk4.1-devel
-
-fuse-sshfs

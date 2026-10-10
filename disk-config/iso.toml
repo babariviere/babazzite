@@ -1,7 +1,7 @@
 [customizations.installer.kickstart]
 contents = """
 %post
-bootc switch --mutate-in-place --transport registry ghcr.io/babariviere/babazzite:stable
+bootc switch --mutate-in-place --enforce-container-sigpolicy --transport registry ghcr.io/babariviere/babazzite:stable
 %end
 """
 

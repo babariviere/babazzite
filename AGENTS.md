@@ -4,7 +4,7 @@
 
 babazzite is a custom [bootc](https://bootc-dev.github.io/bootc/) OS image: a
 personal derivation of [Bazzite](https://bazzite.gg/) (`ghcr.io/ublue-os/bazzite:stable`)
-tweaked to run the [niri](https://github.com/YaLTeR/niri) Wayland compositor.
+(KDE Plasma) with game mode, punktfunk streaming, and virtualization on top.
 It is built from a `Containerfile`, published to GHCR by GitHub Actions, and
 installed/upgraded on real machines via `bootc`.
 
@@ -18,7 +18,8 @@ The "build" produces an OCI container image that doubles as a bootable OS.
 - `build-files/build.sh` - the customization script run during build (enable COPR
   repos, install packages, relocate `/opt` payloads, enable systemd units).
 - `build-files/packages` - newline-separated list of RPMs to install, with comment
-  sections. Commented (`#`) lines are intentionally disabled, not deletions.
+  sections. Development toolchains do not go here; they belong in the devbox
+  (`system-files/usr/share/babazzite/distrobox/dev.ini`, created by `ujust devbox`).
 - `system-files/usr/...` - files baked into the image at their final paths
   (systemd units, udev rules, sleep hooks).
 - `disk-config/disk.toml`, `disk-config/iso.toml` - bootc-image-builder configs
@@ -58,7 +59,9 @@ build unless a local build is specifically requested. The CI build runs
 - Bash scripts use `set -ouex pipefail` / `set -eoux pipefail`. Keep that.
 - Commits are conventional commits (`feat:`, `fix:`, `chore:`, `ci:`).
 - Version control is `jj` (jujutsu), not git directly.
-- Renovate/Dependabot pin and update GitHub Action SHAs; don't hand-edit pins.
+- Renovate pins and updates GitHub Action SHAs; don't hand-edit pins.
+- Third-party repos are enabled only during the build and disabled at the end
+  of `build.sh`.
 
 ## Don't
 

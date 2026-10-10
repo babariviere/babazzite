@@ -13,37 +13,36 @@ set -ouex pipefail
 optfix_dir="/usr/lib/opt"
 mkdir -p "$optfix_dir"
 if [ -d /opt ] || [ -h /opt ]; then
-    if ls -A /opt/* 2>/dev/null; then
+    if [ -n "$(ls -A /opt/ 2>/dev/null)" ]; then
         mv /opt/* "$optfix_dir"
     fi
     rm -fr /opt
 fi
 ln -fs "$optfix_dir" /opt
 
-repos=(
-    yalter/niri
-    ulysg/xwayland-satellite
+#### Third-party repos
+# Enabled only for the duration of the build and disabled again at the end, so
+# the shipped image only carries the repos Bazzite itself enables. Terra is
+# Bazzite's own repo and is already enabled in the base.
+coprs=(
     gmaglione/podman-bootc
     imput/helium
 )
 
-for repo in "${repos[@]}"; do
-    dnf5 -y copr enable $repo
+for copr in "${coprs[@]}"; do
+    dnf5 -y copr enable "$copr"
 done
 
-dnf5 -y config-manager setopt "terra".enabled=true
-
-#### Punktfunk repo
-# Moonlight-compatible streaming host, installed from unom's Gitea RPM registry
-# rather than the COPR: only the registry carries the punktfunk-web console
-# (COPR's mock chroot has no bun). The registry has one group per Fedora
-# release; the Bazzite base is currently Fedora 44, so track fedora-44 (the
-# "bazzite" group is the Fedora 43 build). Bump this on the next major rebase.
+# Punktfunk: Moonlight-compatible streaming host, installed from unom's Gitea RPM
+# registry rather than the COPR: only the registry carries the punktfunk-web
+# console (COPR's mock chroot has no bun). The registry has one group per Fedora
+# release, so track whatever release the Bazzite base is on.
 # https://docs.punktfunk.unom.io/docs/bazzite
-cat >/etc/yum.repos.d/punktfunk.repo <<'EOF'
+fedora_version="$(rpm -E %fedora)"
+cat >/etc/yum.repos.d/punktfunk.repo <<EOF
 [punktfunk]
 name=punktfunk (unom)
-baseurl=https://git.unom.io/api/packages/unom/rpm/fedora-44
+baseurl=https://git.unom.io/api/packages/unom/rpm/fedora-${fedora_version}
 enabled=1
 gpgcheck=1
 repo_gpgcheck=1
@@ -51,22 +50,9 @@ gpgkey=https://git.unom.io/api/packages/unom/rpm/repository.key
        https://git.unom.io/api/packages/unom/generic/punktfunk-keys/1/RPM-GPG-KEY-punktfunk
 EOF
 
-### Install packages
+#### Install packages
 
-cat /etc/yum.repos.d/terra.repo
-
-grep -v '^#' /ctx/packages | xargs dnf5 install -y
-
-#### Setup environment
-
-cat >>/etc/environment <<EOF
-PKG_CONFIG_PATH=/etc/pkgconfig:/usr/lib64/pkgconfig:/usr/share/pkgconfig
-EOF
-
-#### Setup niri deps
-
-mkdir /usr/lib/systemd/user/niri.service.wants
-# ln -s /usr/lib/systemd/user/mako.service /usr/lib/systemd/user/niri.service.wants/
+grep -Ev '^[[:space:]]*(#|$)' /ctx/packages | xargs dnf5 install -y
 
 #### Services
 
@@ -82,8 +68,7 @@ systemctl enable libvirtd
 systemctl enable -f --global punktfunk-host
 systemctl enable -f --global punktfunk-web
 
-# Firewall: the punktfunk RPM ships the service definitions, so this can run here
-# (unlike the old Wolf rule, which lived in a COPY'd system-files XML).
+# Firewall: the punktfunk RPM ships the service definitions, so this can run here.
 # punktfunk-gamestream (the Moonlight-compatible port set) is deliberately NOT
 # opened: this host serves the native punktfunk/1 clients only, and the
 # GameStream planes carry plain-HTTP pairing plus legacy GCM nonce reuse.
@@ -99,10 +84,30 @@ firewall-offline-cmd --add-service=punktfunk-web
 # 9777 QUIC control port that punktfunk-native already covers.
 firewall-offline-cmd --add-port=9778/udp
 
+#### Image signature policy
+# CI signs every pushed digest with cosign (cosign.pub / SIGNING_SECRET). Require
+# that signature for this repository, so a deployment switched with
+# `bootc switch --enforce-container-sigpolicy` verifies every upgrade.
+install -Dm644 /ctx/cosign.pub /etc/pki/containers/babazzite.pub
+install -Dm644 /dev/stdin /etc/containers/registries.d/babazzite.yaml <<'EOF'
+docker:
+  ghcr.io/babariviere/babazzite:
+    use-sigstore-attachments: true
+EOF
+policy=/etc/containers/policy.json
+jq '.transports.docker["ghcr.io/babariviere/babazzite"] = [{
+        "type": "sigstoreSigned",
+        "keyPath": "/etc/pki/containers/babazzite.pub",
+        "signedIdentity": { "type": "matchRepository" }
+    }]' "$policy" >/tmp/policy.json
+install -m644 /tmp/policy.json "$policy"
 
-for repo in "${repos[@]}"; do
-    dnf5 -y copr disable $repo
+#### Disable build-only repos
+
+for copr in "${coprs[@]}"; do
+    dnf5 -y copr disable "$copr"
 done
+dnf5 -y config-manager setopt punktfunk.enabled=0
 
 #### Optfix (post): recreate /opt/<name> symlinks on the live system
 # Generate a tmpfiles.d entry for each payload under /usr/lib/opt so that
@@ -112,7 +117,7 @@ mkdir -p /usr/lib/tmpfiles.d
 shopt -s nullglob
 for optdir in "$optfix_dir"/*/; do
     opt=$(basename "$optdir")
-    echo "L+ /opt/${opt} - - - - ${optfix_dir}/${opt}" > "/usr/lib/tmpfiles.d/99-optfix-${opt}.conf"
+    echo "L+ /opt/${opt} - - - - ${optfix_dir}/${opt}" >"/usr/lib/tmpfiles.d/99-optfix-${opt}.conf"
 done
 shopt -u nullglob
 
