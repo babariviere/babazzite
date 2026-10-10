@@ -70,7 +70,9 @@ curl -fsSL https://github.com/catppuccin/papirus-folders/archive/f83671d17ea67e3
 cp -r "$papirus_tmp"/src/* /usr/share/icons/Papirus/
 curl -fsSL -o "$papirus_tmp/papirus-folders" \
     https://raw.githubusercontent.com/PapirusDevelopmentTeam/papirus-folders/0f838ee5679229e3a3e97e3b333c222c9e9615b4/papirus-folders
-bash "$papirus_tmp/papirus-folders" -C cat-mocha-mauve --theme Papirus-Dark
+# Pass the theme by path: the build environment's XDG_DATA_DIRS hides /usr/share
+# from papirus-folders' theme lookup.
+bash "$papirus_tmp/papirus-folders" -C cat-mocha-mauve --theme /usr/share/icons/Papirus-Dark
 rm -rf "$papirus_tmp"
 
 #### Services
