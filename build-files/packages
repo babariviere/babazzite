@@ -103,7 +103,10 @@ pipewire
 pamixer
 pavucontrol
 # Noise canceling
-easyeffects
+# The mic chain is a PipeWire filter-chain (see dotfiles:
+# .config/pipewire/pipewire.conf.d/99-mic-clean.conf), not easyeffects.
+# It needs the CAPS noisegate; RNNoise comes from a LADSPA plugin in ~/.ladspa.
+ladspa-caps-plugins
 calf
 lsp-plugins
 lsp-plugins-clap
