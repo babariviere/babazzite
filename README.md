@@ -43,6 +43,7 @@ On top of it, the image bundles:
 | `build-files/build.sh` | Build-time script: enable repos, install packages, relocate `/opt`, enable units, open firewall ports, install the signature policy, disable build-only repos. |
 | `build-files/packages` | Newline-separated RPM list, grouped under comment headers. |
 | `system-files/usr/` | Files baked into the image at their final absolute paths, minus the `system-files` prefix. |
+| `system-files/etc/` | `/etc` defaults, only for config that must live in `/etc` (e.g. sysctls that tuned must not override). |
 | `disk-config/` | bootc-image-builder configs for qcow2/raw/iso output. |
 | `Justfile` | Build, run, lint, format recipes. Mostly upstream template. |
 | `.github/workflows/build.yml` | Builds, signs with cosign, pushes to GHCR. Runs on push and daily at 10:05 UTC. |

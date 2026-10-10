@@ -37,6 +37,8 @@ The "build" produces an OCI container image that doubles as a bootable OS.
 - Enable a COPR/repo or run install-time logic: edit `build-files/build.sh`.
 - Ship a config/systemd unit/udev rule: drop it under `system-files/usr/...` at
   its real absolute path (minus the `system-files` prefix).
+  Use `system-files/etc/...` only when the file must be in `/etc` (sysctls
+  under `/usr/lib/sysctl.d` lose to tuned, which reapplies only `/etc/sysctl.d`).
 - Anything an RPM installs into `/opt` must be relocated to `/usr/lib/opt` with a
   `tmpfiles.d` symlink, because `/opt` -> `/var/opt` is per-machine state and is
   wiped on bootc deploys. See the helium example in `build.sh`.

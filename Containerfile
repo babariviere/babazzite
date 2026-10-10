@@ -16,7 +16,10 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     /ctx/build.sh
 
 # Layer 2: system configuration files (cheap, changes often).
+# /etc files become the image's defaults; bootc's 3-way merge delivers them to
+# machines unless they were modified locally. Prefer /usr where possible.
 COPY system-files/usr /usr
+COPY system-files/etc /etc
 
 # Layer 3: finalize the ostree commit.
 # /run and /tmp must be empty in a bootc image, and the package installs above
