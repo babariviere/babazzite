@@ -12,7 +12,9 @@ fontawesome-fonts-all
 nerd-fonts
 
 # desktop
-# icon theme for the Plasma setup in dotfiles (run_onchange_after_kde_setup.sh)
+# theming for the Plasma setup in dotfiles (run_onchange_after_kde_setup.sh);
+# Darkly and the Catppuccin Papirus folders are installed in build.sh
+klassy
 papirus-icon-theme
 
 # utility

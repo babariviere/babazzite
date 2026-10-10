@@ -26,6 +26,7 @@ ln -fs "$optfix_dir" /opt
 # terra disabled (only terra-mesa is on); 1password, ghostty and the gamescope
 # session packages come from it.
 coprs=(
+    errornointernet/klassy
     gmaglione/podman-bootc
     imput/helium
 )
@@ -55,6 +56,22 @@ EOF
 #### Install packages
 
 grep -Ev '^[[:space:]]*(#|$)' /ctx/packages | xargs dnf5 install -y
+
+# Darkly (Qt application style) is only published as per-release RPMs on GitHub.
+darkly_version=0.5.40
+dnf5 install -y "https://github.com/Bali10050/Darkly/releases/download/v${darkly_version}/darkly-${darkly_version}.fc${fedora_version}.x86_64.rpm"
+
+#### Papirus: Catppuccin Mocha Mauve folders
+# Adds the cat-* folder colours to Papirus and switches Papirus-Dark to mauve,
+# matching the Plasma colour scheme set up in the dotfiles. Pinned commits.
+papirus_tmp="$(mktemp -d)"
+curl -fsSL https://github.com/catppuccin/papirus-folders/archive/f83671d17ea67e335b34f8028a7e6d78bca735d7.tar.gz |
+    tar -xz -C "$papirus_tmp" --strip-components=1
+cp -r "$papirus_tmp"/src/* /usr/share/icons/Papirus/
+curl -fsSL -o "$papirus_tmp/papirus-folders" \
+    https://raw.githubusercontent.com/PapirusDevelopmentTeam/papirus-folders/0f838ee5679229e3a3e97e3b333c222c9e9615b4/papirus-folders
+bash "$papirus_tmp/papirus-folders" -C cat-mocha-mauve --theme Papirus-Dark
+rm -rf "$papirus_tmp"
 
 #### Services
 
